@@ -11,6 +11,11 @@ public class InteractionEvaluator : MonoBehaviour
     private GameObject UserController;
     private ModelTeleporterController MainController;
 
+    public void SetDefaultCoordinatesForVr()
+    {
+        teleportCoordinateModelDefault.y -= 1.5f;
+    }
+
     public void SetUserController(GameObject Controller)
     {
         this.UserController = Controller;
@@ -41,14 +46,25 @@ public class InteractionEvaluator : MonoBehaviour
         }
     }
 
+    public void ResetTeleportOnTerrainChange()
+    {        
+        if (isTeleportedToReal)
+        {
+            TeleportBetweenModelReal();
+        }
+        teleportCoordinateRealLast = teleportCoordinateRealDefault;
+    }
+
     public void TeleportInReal(Vector3 hit, GameObject HitObject)
     {
-        if (HitObject == MainController.ObjectModel)
+        if (HitObject == MainController.GetCurrentTerrainModel())
         {
-            Vector3 NormalizedInput = CoordinateEvaluator.NormalizeRayInput(MainController.ObjectModel, hit);
-            TeleportToPosition(CoordinateEvaluator.NormalizeRayOutput(MainController.ObjectReal, NormalizedInput));
+            Vector3 NormalizedInput =
+                CoordinateEvaluator.NormalizeRayInput(MainController.GetCurrentTerrainModel(), hit);
+            TeleportToPosition(CoordinateEvaluator.NormalizeRayOutput(MainController.GetCurrentTerrainReal(),
+                NormalizedInput));
         }
-        else if (HitObject == MainController.ObjectReal)
+        else if (HitObject == MainController.GetCurrentTerrainReal())
         {
             TeleportToPosition(new Vector3(hit.x, hit.y + 0.5f, hit.z));
         }
@@ -63,7 +79,10 @@ public class InteractionEvaluator : MonoBehaviour
 
     private void TeleportToPosition(Vector3 Position)
     {
-        UserController.GetComponent<CharacterController>().enabled = false;
+        if (UserController.GetComponent<CharacterController>() != null)
+        {
+            UserController.GetComponent<CharacterController>().enabled = false;
+        }
         //model position is one coordinate, real position can be wherever on the map
         if (Position == teleportCoordinateModelDefault)
         {
@@ -76,13 +95,17 @@ public class InteractionEvaluator : MonoBehaviour
             Position = new Vector3(Position.x, Position.y + 0.5f, Position.z); //to teleport above terrain
         }
         UserController.transform.position = Position;
-        UserController.GetComponent<CharacterController>().enabled = true;
+        if (UserController.GetComponent<CharacterController>() != null)
+        {
+            UserController.GetComponent<CharacterController>().enabled = true;
+        }
     }
 
     //TODO: move this functon (or a part of it) to a geometry spawner class
     public void CreateGeometry(Vector3 hit, GameObject HitObject)
     {
-        if (HitObject == MainController.ObjectModel && MainController.Generator.VerifyInstantiationAllowed())
+        if (HitObject == MainController.GetCurrentTerrainModel() &&
+            MainController.Generator.VerifyInstantiationAllowed())
         {
             float minimumInstantiationDistanceModel = 0.1f;
             if (!CoordinateEvaluator.VerifyCloseness(MainController.Generator.ObjectModelReferences, hit,
@@ -91,7 +114,8 @@ public class InteractionEvaluator : MonoBehaviour
                 MainController.Generator.InstantiateGeometry(hit);
             }
         }
-        else if (HitObject == MainController.ObjectReal && MainController.Generator.VerifyInstantiationAllowed())
+        else if (HitObject == MainController.GetCurrentTerrainReal() &&
+            MainController.Generator.VerifyInstantiationAllowed())
         {
             float minimumInstantiationDistanceUser = 8f;
             float minimumInstantiationDistanceTowers = minimumInstantiationDistanceUser * 2;
@@ -116,7 +140,8 @@ public class InteractionEvaluator : MonoBehaviour
                 //                               projectionHit3.point.y, ProjectionCoordinate.z);
 
                 Vector2 projectionRatio = CoordinateEvaluator.NormalizeRayInput(HitObject, hit);
-                Vector3 ModelHit = CoordinateEvaluator.NormalizeRayOutput(MainController.ObjectModel, projectionRatio);
+                Vector3 ModelHit =
+                    CoordinateEvaluator.NormalizeRayOutput(MainController.GetCurrentTerrainModel(), projectionRatio);
 
                 MainController.Generator.InstantiateGeometry(ModelHit);
             }

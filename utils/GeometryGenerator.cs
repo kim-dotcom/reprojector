@@ -53,16 +53,16 @@ public class GeometryGenerator : MonoBehaviour
         NewInstanceGroup.transform.parent = ParentInstantiated.transform;
 
         //position passed by function is on model (draw from here...)
-        GameObject NewInstanceModel = Instantiate(MainController.RadioModel);
+        GameObject NewInstanceModel = Instantiate(MainController.GetCurrentPlacementModel());
         NewInstanceModel.transform.parent = NewInstanceGroup.transform;
         NewInstanceModel.transform.position = Position;
         SetLayer(NewInstanceModel, instantiatedLayerName);
         //recalculate to real position and draw here, too
-        GameObject NewInstanceReal = Instantiate(MainController.RadioReal);
-        Vector3 NormalizedInput = CoordinateEvaluator.NormalizeRayInput(MainController.ObjectModel,
+        GameObject NewInstanceReal = Instantiate(MainController.GetCurrentPlacementReal());
+        Vector3 NormalizedInput = CoordinateEvaluator.NormalizeRayInput(MainController.GetCurrentTerrainModel(),
                                                                         NewInstanceModel.transform.position);
-        NewInstanceReal.transform.position = CoordinateEvaluator.NormalizeRayOutput(MainController.ObjectReal,
-                                                                                    NormalizedInput);
+        NewInstanceReal.transform.position =
+            CoordinateEvaluator.NormalizeRayOutput(MainController.GetCurrentTerrainReal(), NormalizedInput);
         NewInstanceReal.transform.parent = NewInstanceGroup.transform;
         SetLayer(NewInstanceReal, instantiatedLayerName);
 
@@ -86,6 +86,7 @@ public class GeometryGenerator : MonoBehaviour
         ObjectRealReferences.Add(NewInstanceReal);
     }
 
+    //destroys a model (or real) instantiated geometry and its counterpart
     public void DestroyGeometry(GameObject TargetObject)
     {
         int index = TargetObject.transform.parent.parent.GetSiblingIndex();
@@ -93,8 +94,28 @@ public class GeometryGenerator : MonoBehaviour
         MainController.VisualizerModel.RemoveVisibilityPointById(index);
         ObjectModelReferences.RemoveAt(index);
         ObjectRealReferences.RemoveAt(index);
-
         Destroy(TargetObject.transform.parent.parent.gameObject);
+    }
+
+    //used to sweep all instantiated geometry when transitioning to another terrain collection
+    public void DestroyAllGeometry()
+    {
+        foreach (Transform child in ParentInstantiated.transform)
+        {
+            Destroy(child.gameObject);            
+        }
+        ObjectModelReferences.Clear();
+        ObjectRealReferences.Clear();
+        this.DestroyProjectionPlane(MainController.GetCurrentTerrainModel());
+        this.DestroyProjectionPlane(MainController.GetCurrentTerrainReal());
+    }
+
+    public void DestroyProjectionPlane(GameObject ProjectedObject)
+    {
+        if (ProjectedObject.transform.GetChild(3) != null)
+        {
+            Destroy(ProjectedObject.transform.GetChild(3).gameObject);
+        }
     }
 
     public void SetLayer(GameObject TargetObject, string layer)
@@ -108,6 +129,6 @@ public class GeometryGenerator : MonoBehaviour
 
     public bool VerifyInstantiationAllowed()
     {
-        return (ObjectModelReferences.Count < MainController.maximumObjectInstances) ? true : false;
+        return (ObjectModelReferences.Count < MainController.GetCurrentMaxInstances()) ? true : false;
     }
 }

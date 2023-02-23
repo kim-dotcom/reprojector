@@ -71,7 +71,6 @@ public class RaycasterScreen : Raycaster
         raycastTargetPoint.SetActive(displayRaycast);
         raycastTargetPoint.transform.position = new Vector3(-10000f, -10000f, -10000f);
     }
-
     
     public override RaycastHitInfo Raycast ()
     {
@@ -123,43 +122,5 @@ public class RaycasterScreen : Raycaster
                 canvasText.text += "\r\n invalid teleporter object";
             }
         }        
-    }
-}
-
-//raycasts wherever the controller is pointing 
-public class RaycasterVrController : Raycaster
-{
-
-    public void setRaycaster(GameObject VrController, bool displayRaycast, bool displayCanvasInfo, Canvas canvas)
-    {
-        this.Origin = VrController;
-        this.displayRaycast = displayRaycast;
-        this.displayCanvasInfo = displayCanvasInfo;
-        if (canvas != null)
-        {
-            this.DisplayCanvas = canvas;
-            canvasText = DisplayCanvas.GetComponent<Text>();
-        }
-        raycastTargetPoint.SetActive(displayRaycast);
-        raycastTargetPoint.transform.position = new Vector3(-10000f, -10000f, -10000f);
-    }
-
-    //TODO...
-    public override RaycastHitInfo Raycast()
-    {
-        RaycastHit vrHit;
-        Vector3 raycastDir = Origin.transform.position - Origin.transform.GetChild(0).transform.position;
-
-        Debug.DrawRay(Origin.transform.position, raycastDir, Color.yellow);
-
-        Physics.Raycast(Origin.transform.position, raycastDir, out vrHit, Mathf.Infinity);        
-        if (Physics.Raycast(ray, out vrHit))
-        {
-            return new RaycastHitInfo(vrHit.point, vrHit.collider.gameObject);
-        }
-        else
-        {
-            return new RaycastHitInfo(Vector3.zero, null);
-        }
     }
 }

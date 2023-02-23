@@ -34,7 +34,7 @@ public static class CoordinateEvaluator
         Vector3 PlaneX1Y0 = TargetObject.transform.GetChild(1).transform.position;
         Vector3 PlaneX0Y1 = TargetObject.transform.GetChild(2).transform.position;
 
-        float projectionHeight = Mathf.Abs(PlaneX0Y0.z - PlaneX0Y1.z); Debug.Log(projectionHeight);
+        float projectionHeight = Mathf.Abs(PlaneX0Y0.z - PlaneX0Y1.z);
         Vector3 ProjectionCoordinate = new Vector3(Mathf.Lerp(PlaneX0Y0.x, PlaneX1Y0.x, projectionTransferRatio.x),
                                                    PlaneX0Y0.y + projectionHeight,
                                                    Mathf.Lerp(PlaneX0Y0.z, PlaneX0Y1.z, projectionTransferRatio.y));

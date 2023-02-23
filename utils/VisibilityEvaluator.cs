@@ -49,6 +49,11 @@ public class VisibilityEvaluator : MonoBehaviour
         }        
     }
 
+    public void RemoveVisibilityPointsAll()
+    {
+        VisibilityPoints.Clear();
+    }
+
     public void SetColorVisible(Color color)
     {
         ColorVisible = color;
